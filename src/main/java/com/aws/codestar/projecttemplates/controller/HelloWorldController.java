@@ -1,5 +1,6 @@
 package com.aws.codestar.projecttemplates.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,11 +13,15 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/hello")
 public class HelloWorldController {
 
-    private final String siteName;
+	/**
+     * Retrieved from properties file.
+     */
+    @Value("${HelloWorld.SiteName}")
+    private String siteName;
 
-    public HelloWorldController(final String siteName) {
+/*    public HelloWorldController(final String siteName) {
         this.siteName = siteName;
-    }
+    }*/
 
     @RequestMapping(method = RequestMethod.GET)
     public ModelAndView helloWorld() {
