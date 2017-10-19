@@ -9,7 +9,7 @@ import org.springframework.web.servlet.ModelAndView;
  * Basic Spring MVC controller that handles all GET requests.
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping("/hello")
 public class HelloWorldController {
 
     private final String siteName;
