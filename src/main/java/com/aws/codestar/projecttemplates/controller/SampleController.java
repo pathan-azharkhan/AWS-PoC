@@ -13,15 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
+//@EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class SampleController {
 	
 	@Value("${RDS_DB_NAME:N/A}")
 	private String dbName;
 	
-	@Value("${RDS_DB_NAME:N/A}")
+	@Value("${RDS_USERNAME:N/A}")
 	private String dbUserName;
 	
-	@Value("${RDS_DB_NAME:N/A}")
+	@Value("${RDS_PASSWORD:N/A}")
 	private String dbHostname;
 
 	@RequestMapping(value = "/rds", method = RequestMethod.GET)
