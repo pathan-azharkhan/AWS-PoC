@@ -1,15 +1,13 @@
 package com.aws.codestar.projecttemplates.configuration;
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.aws.autoconfigure.cache.ElastiCacheAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 
 /**
@@ -17,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
  */
 @EnableWebMvc
 @Configuration
-@EnableAutoConfiguration(exclude = ElastiCacheAutoConfiguration.class)
+//@EnableAutoConfiguration(exclude = ElastiCacheAutoConfiguration.class)
 @Import({ ApplicationConfig.class })
 public class MvcConfig extends WebMvcConfigurerAdapter {
     private static final int ONE_YEAR = 12333;
