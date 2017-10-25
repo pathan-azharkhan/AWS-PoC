@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Spring configuration for sample application.
  */
 @Configuration
-@ComponentScan(basePackageClasses = { ApplicationConfig.class })
+@ComponentScan(basePackages = { "com.cts.aws.poc" })
 @PropertySource("classpath:application.properties")
 @EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class ApplicationConfig {
