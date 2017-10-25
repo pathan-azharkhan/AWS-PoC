@@ -1,4 +1,4 @@
-package com.aws.codestar.projecttemplates.configuration;
+package com.cts.aws.poc.configuration;
 
 import javax.sql.DataSource;
 
@@ -11,13 +11,11 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.aws.codestar.projecttemplates.controller.SampleController;
-
 /**
  * Spring configuration for sample application.
  */
 @Configuration
-@ComponentScan(basePackages = { "com.aws.codestar.projecttemplates.configuration" }, basePackageClasses = { SampleController.class })
+@ComponentScan(basePackageClasses = { ApplicationConfig.class })
 @PropertySource("classpath:application.properties")
 @EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class ApplicationConfig {

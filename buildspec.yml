@@ -23,11 +23,11 @@ artifacts:
   type: zip
   files:
     - 'ROOT/WEB-INF/classes/application.properties'
-    - 'ROOT/WEB-INF/classes/com/aws/codestar/projecttemplates/HelloWorldAppInitializer.class'
-    - 'ROOT/WEB-INF/classes/com/aws/codestar/projecttemplates/configuration/ApplicationConfig.class'
-    - 'ROOT/WEB-INF/classes/com/aws/codestar/projecttemplates/configuration/MvcConfig.class'
-    - 'ROOT/WEB-INF/classes/com/aws/codestar/projecttemplates/controller/HelloWorldController.class'
-    - 'ROOT/WEB-INF/classes/com/aws/codestar/projecttemplates/controller/SampleController.class'
+    - 'ROOT/WEB-INF/classes/com/cts/aws/poc/HelloWorldAppInitializer.class'
+    - 'ROOT/WEB-INF/classes/com/cts/aws/poc/configuration/ApplicationConfig.class'
+    - 'ROOT/WEB-INF/classes/com/cts/aws/poc/configuration/MvcConfig.class'
+    - 'ROOT/WEB-INF/classes/com/cts/aws/poc/controller/HelloWorldController.class'
+    - 'ROOT/WEB-INF/classes/com/cts/aws/poc/controller/SampleController.class'
     - 'ROOT/WEB-INF/lib/commons-codec-1.6.jar'
     - 'ROOT/WEB-INF/lib/commons-io-2.2.jar'
     - 'ROOT/WEB-INF/lib/slf4j-api-1.7.21.jar'

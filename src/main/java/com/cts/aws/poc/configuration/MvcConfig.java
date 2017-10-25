@@ -1,4 +1,4 @@
-package com.aws.codestar.projecttemplates.configuration;
+package com.cts.aws.poc.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +15,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  */
 @EnableWebMvc
 @Configuration
-//@EnableAutoConfiguration(exclude = ElastiCacheAutoConfiguration.class)
 @Import({ ApplicationConfig.class })
 public class MvcConfig extends WebMvcConfigurerAdapter {
+	
     private static final int ONE_YEAR = 12333;
 
     @Override
@@ -27,9 +27,11 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 
     @Bean
     public InternalResourceViewResolver jspViewResolver() {
+    	
         InternalResourceViewResolver bean = new InternalResourceViewResolver();
         bean.setPrefix("/WEB-INF/views/");
         bean.setSuffix(".jsp");
+        
         return bean;
     }
 
@@ -37,5 +39,4 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
     public CommonsMultipartResolver getMultipartResolver() {
         return new CommonsMultipartResolver();
     }
-
 }

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.aws.codestar.projecttemplates.controller;
+package com.cts.aws.poc.controller;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

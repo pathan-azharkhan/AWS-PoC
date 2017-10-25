@@ -1,4 +1,4 @@
-package com.aws.codestar.projecttemplates.controller;
+package com.cts.aws.poc.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -29,5 +29,4 @@ public class HelloWorldController {
         mav.addObject("siteName", this.siteName);
         return mav;
     }
-
 }

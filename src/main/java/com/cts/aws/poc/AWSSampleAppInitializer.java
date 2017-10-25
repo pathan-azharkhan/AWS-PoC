@@ -1,13 +1,13 @@
-package com.aws.codestar.projecttemplates;
+package com.cts.aws.poc;
 
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
-import com.aws.codestar.projecttemplates.configuration.MvcConfig;
+import com.cts.aws.poc.configuration.MvcConfig;
 
 /**
- * Utility to initialize the Spring MVC HelloWorld application.
+ * Utility to initialize the Spring MVC Sample application.
  */
-public class HelloWorldAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+public class AWSSampleAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
