@@ -3,6 +3,7 @@ package com.cts.aws.poc.configuration;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.aws.context.config.annotation.EnableContextResourceLoader;
 import org.springframework.cloud.aws.jdbc.config.annotation.EnableRdsInstance;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -17,6 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Configuration
 @ComponentScan(basePackages = { "com.cts.aws.poc" })
 @PropertySource("classpath:application.properties")
+@EnableContextResourceLoader
 @EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class ApplicationConfig {
 
@@ -26,6 +28,13 @@ public class ApplicationConfig {
 		
 		return new JdbcTemplate(dataSource);
 	}
+	
+	/*@Bean
+	@Autowired
+	public static ResourceLoaderBeanPostProcessor resourceLoaderBeanPostProcessor(AmazonS3Client amazonS3EncryptionClient) {
+		
+		return new ResourceLoaderBeanPostProcessor(amazonS3EncryptionClient);
+	}*/
 
     /*@Bean
     public HelloWorldController helloWorld() {
