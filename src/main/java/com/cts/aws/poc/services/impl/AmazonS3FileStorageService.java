@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 import org.springframework.stereotype.Component;
@@ -22,12 +23,15 @@ import com.cts.aws.poc.services.FileStorageService;
 @Component
 public class AmazonS3FileStorageService implements FileStorageService {
 	
+	@Value("${amazon.s3.bucket.name}")
+	private String bucketName;
+	
 	@Autowired
 	private ResourceLoader resourceLoader;
 
 	public void store(MultipartFile file) {
-
-		WritableResource resource = (WritableResource) resourceLoader.getResource("s3://bucket/test.txt");
+		
+		WritableResource resource = (WritableResource) resourceLoader.getResource("s3://" + bucketName + "/test.txt");
 		
 		try {
 			OutputStream outputStream = resource.getOutputStream();
