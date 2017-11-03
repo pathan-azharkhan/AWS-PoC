@@ -31,7 +31,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 
 	public void store(MultipartFile file) {
 		
-		WritableResource resource = (WritableResource) resourceLoader.getResource("s3://" + bucketName + "/test.txt");
+		WritableResource resource = (WritableResource) resourceLoader.getResource("s3://" + bucketName + "/" + file.getOriginalFilename());
 		
 		try {
 			OutputStream outputStream = resource.getOutputStream();

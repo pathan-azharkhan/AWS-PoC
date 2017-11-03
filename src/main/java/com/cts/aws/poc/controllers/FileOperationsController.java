@@ -3,6 +3,7 @@
  */
 package com.cts.aws.poc.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,13 +21,13 @@ import com.cts.aws.poc.services.FileStorageService;
 @Controller
 public class FileOperationsController {
 	
-//	@Autowired
+	@Autowired
 	private FileStorageService fileStorageService;
 
 	@PostMapping("/upload")
 	public String receivePaymentFile(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
 		
-//		fileStorageService.store(file);
+		fileStorageService.store(file);
 		
 		redirectAttributes.addFlashAttribute("message", "Successfully uploaded " + file.getOriginalFilename() + "!");
 		
