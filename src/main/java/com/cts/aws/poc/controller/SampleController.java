@@ -11,16 +11,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * @author Azharkhan
  *
  */
-@RestController
+@Controller
 public class SampleController {
 	
 	@Value("${RDS_DB_NAME:N/A}")
@@ -36,13 +39,13 @@ public class SampleController {
 	private JdbcTemplate jdbcTemplate;
 	
 	@RequestMapping(value = "/rds", method = RequestMethod.GET)
-	public String getRDSDetails() {
+	public @ResponseBody String getRDSDetails() {
 		
 		return new StringBuilder().append(dbName).append("|").append(dbUserName).append("|").append(dbHostname).toString();
 	}
 	
 	@RequestMapping(value = "/db", method = RequestMethod.GET)
-	public String getDatabases() {
+	public @ResponseBody String getDatabases() {
 		
 		List<String> list = jdbcTemplate.query("show databases", new RowMapper<String>() {
 
@@ -54,4 +57,10 @@ public class SampleController {
 		
 		return CollectionUtils.isEmpty(list) ? "No data" : list.get(0);
 	}
+	
+	@GetMapping("/rds/db")
+    public ModelAndView uploadScreen() {
+    	
+        return new ModelAndView("db");
+    }
 }

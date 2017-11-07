@@ -30,7 +30,7 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 	
 	public void afterPropertiesSet() throws Exception {
 		
-		AmazonS3 amazonS3Client = AmazonS3ClientBuilder.defaultClient();
+		/*AmazonS3 amazonS3Client = AmazonS3ClientBuilder.defaultClient();
 		
 		if (amazonS3Client.getBucketNotificationConfiguration("qConfiguration") == null) {
 
@@ -38,7 +38,7 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 			BucketNotificationConfiguration bucketNotificationConfiguration = new BucketNotificationConfiguration("qConfiguration", qConfiguration);
 
 			amazonS3Client.setBucketNotificationConfiguration(bucketName, bucketNotificationConfiguration);
-		}
+		}*/
 		
 //		AmazonSQS
 	}
