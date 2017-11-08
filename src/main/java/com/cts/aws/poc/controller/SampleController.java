@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +41,7 @@ public class SampleController {
 	}
 	
 	@RequestMapping(value = "/db", method = RequestMethod.GET)
-	public String getDatabases() {
+	public List<String> getDatabases() {
 		
 		List<String> list = jdbcTemplate.query("show databases", new RowMapper<String>() {
 
@@ -52,6 +51,6 @@ public class SampleController {
 			}
 		});
 		
-		return CollectionUtils.isEmpty(list) ? "No data" : list.get(0);
+		return list;
 	}
 }

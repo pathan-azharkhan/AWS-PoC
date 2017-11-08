@@ -3,6 +3,8 @@
  */
 package com.cts.aws.poc.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +34,12 @@ public class FileOperationsController {
 		redirectAttributes.addFlashAttribute("message", "Successfully uploaded " + file.getOriginalFilename() + "!");
 		
 		return "redirect:/file";
+	}
+	
+	@GetMapping("/buckets")
+	public List<String> listBuckets() {
+		
+		return fileStorageService.listBuckets();
 	}
 	
 	@GetMapping("/file")
