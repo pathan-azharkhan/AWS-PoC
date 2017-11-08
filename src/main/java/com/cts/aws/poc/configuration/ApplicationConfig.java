@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.aws.autoconfigure.context.ContextStackAutoConfiguration;
 import org.springframework.cloud.aws.context.config.annotation.EnableContextResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,7 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @ComponentScan(basePackages = { "com.cts.aws.poc" })
 @PropertySource("classpath:application.properties")
 @EnableContextResourceLoader
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = { ContextStackAutoConfiguration.class })
 //@EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class ApplicationConfig {
 
