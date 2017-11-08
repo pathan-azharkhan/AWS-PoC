@@ -3,8 +3,8 @@ package com.cts.aws.poc.configuration;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.aws.context.config.annotation.EnableContextResourceLoader;
-import org.springframework.cloud.aws.jdbc.config.annotation.EnableRdsInstance;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +19,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @ComponentScan(basePackages = { "com.cts.aws.poc" })
 @PropertySource("classpath:application.properties")
 @EnableContextResourceLoader
-@EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
+@EnableAutoConfiguration
+//@EnableRdsInstance(dbInstanceIdentifier = "sampledb", password = "${RDS_PASSWORD}")
 public class ApplicationConfig {
 
 	@Bean
@@ -35,11 +36,6 @@ public class ApplicationConfig {
 		
 		return new ResourceLoaderBeanPostProcessor(amazonS3EncryptionClient);
 	}*/
-
-    /*@Bean
-    public HelloWorldController helloWorld() {
-        return new HelloWorldController(this.siteName);
-    }*/
 
     /**
      * Required to inject properties using the 'Value' annotation.
