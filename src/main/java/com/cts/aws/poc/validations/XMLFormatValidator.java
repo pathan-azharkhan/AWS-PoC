@@ -84,7 +84,7 @@ class SchemaValidationErrorHandler implements ErrorHandler {
 	SchemaValidationErrorHandler(Set<String> validationErrors) {
 		
 		super();
-		Assert.notNull(validationErrors);
+		Assert.notNull(validationErrors, "Argument to this Constructor cannot be null");
 		this.validationErrors = validationErrors;
 	}
 
