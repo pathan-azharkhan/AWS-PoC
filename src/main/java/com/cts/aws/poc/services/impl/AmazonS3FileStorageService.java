@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -65,8 +66,13 @@ public class AmazonS3FileStorageService implements FileStorageService {
 		return s3Client.listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
 	}
 
+	@Override
 	public File retrieve(String fileName) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		File downloadedFile = new File(fileName);
+		
+		s3Client.getObject(new GetObjectRequest(bucketName, fileName), downloadedFile);
+		
+		return downloadedFile;
 	}
 }
