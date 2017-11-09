@@ -30,13 +30,6 @@ public class ApplicationConfig {
 		
 		return new JdbcTemplate(dataSource);
 	}
-	
-	/*@Bean
-	@Autowired
-	public static ResourceLoaderBeanPostProcessor resourceLoaderBeanPostProcessor(AmazonS3Client amazonS3EncryptionClient) {
-		
-		return new ResourceLoaderBeanPostProcessor(amazonS3EncryptionClient);
-	}*/
 
     /**
      * Required to inject properties using the 'Value' annotation.
