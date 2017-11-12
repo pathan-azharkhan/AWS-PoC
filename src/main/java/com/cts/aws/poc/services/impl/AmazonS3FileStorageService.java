@@ -120,6 +120,8 @@ public class AmazonS3FileStorageService implements FileStorageService {
 		
 		s3Client.getObject(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
 		
+		System.out.println("Downloaded file size: " + downloadedFile.length());
+		
 		return downloadedFile;
 	}
 }
