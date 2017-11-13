@@ -7,10 +7,8 @@ import iso.std.iso._20022.tech.xsd.pain_001_001.Document;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -22,13 +20,13 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.context.request.async.DeferredResult.DeferredResultHandler;
 
 import com.cts.aws.poc.constants.PayloadStatus;
+import com.cts.aws.poc.constants.PaymentStatus;
 import com.cts.aws.poc.dao.Payload;
 import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.exceptions.SystemException;
 import com.cts.aws.poc.exceptions.ValidationException;
 import com.cts.aws.poc.models.FailedPayment;
 import com.cts.aws.poc.models.PaymentBatch;
-import com.cts.aws.poc.models.PaymentInstruction;
 import com.cts.aws.poc.services.FileFormatTransformer;
 import com.cts.aws.poc.services.FileStorageService;
 import com.cts.aws.poc.services.FlowOrchestrator;
@@ -138,8 +136,8 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				ValidationException validationEx = (ValidationException) se.getCause();
 				paymentsService.updatePaymentsOnValidationFailure(validationEx.getFailedPayments());
 				
-				// Remove failed payments from the payment batch
-				paymentBatch = cleanPaymentBatch(paymentBatch, validationEx.getFailedPayments());
+				// Remove failed payments from the payment batch canonical and Entity list
+				paymentBatch = cleanPaymentBatch(paymentBatch, savedPayments, validationEx.getFailedPayments());
 			}
 			
 			// Transform the Canonical to Outbound file format
@@ -163,7 +161,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 			
 			// Publish the output file to downstream S3 bucket
 			DeferredResult<Boolean> deferredResult = fileStorageService.store(fileName, outboundFileContent);
-			deferredResult.setResultHandler(new FileDispatchResultHandler(inboundPayload, outboundPayload));
+			deferredResult.setResultHandler(new FileDispatchResultHandler(inboundPayload, outboundPayload, savedPayments));
 		}
 	}
 	
@@ -173,9 +171,12 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		
 		private final Payload outboundPayload;
 		
-		FileDispatchResultHandler(Payload inboundPayload, Payload outboundPayload) {
+		private final List<PaymentDetails> payments;
+		
+		FileDispatchResultHandler(Payload inboundPayload, Payload outboundPayload, List<PaymentDetails> payments) {
 			
 			super();
+			this.payments = payments;
 			this.inboundPayload = inboundPayload;
 			this.outboundPayload = outboundPayload;
 		}
@@ -184,21 +185,28 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		public void handleResult(Object result) {
 			
 			PayloadStatus payloadStatus = PayloadStatus.FAILED;
+			PaymentStatus paymentStatus = PaymentStatus.ERROR;
 			
-			if (Boolean.class.cast(result))
+			if (Boolean.class.cast(result)) {
+				
 				payloadStatus = PayloadStatus.SENT;
+				paymentStatus = PaymentStatus.PROCESSED;
+			}
 			
 			// Update statuses in RDS
 			payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.PROCESSED);
 			payloadService.updatePayloadStatus(outboundPayload, payloadStatus);
+			
+			// TODO: Might want to save Payment Errors in case of failure
+			paymentsService.updatePaymentsOnFileDispatch(payments, paymentStatus);
 		}
 	}
 	
-	private PaymentBatch cleanPaymentBatch(PaymentBatch batch, List<FailedPayment> failedPayments) {
+	private PaymentBatch cleanPaymentBatch(PaymentBatch batchCanonical, List<PaymentDetails> paymentEntities, List<FailedPayment> failedPayments) {
 		
 		List<String> failedPaymentIds = failedPayments.parallelStream().map(failedPayment -> failedPayment.getPayment().getPaymentId()).collect(Collectors.toList());
 		
-		List<PaymentInstruction> cleanedList = batch.getPayments().parallelStream().collect(ArrayList::new, new BiConsumer<List<PaymentInstruction>, PaymentInstruction>() {
+		/*List<PaymentInstruction> cleanedList = batchCanonical.getPayments().parallelStream().collect(ArrayList::new, new BiConsumer<List<PaymentInstruction>, PaymentInstruction>() {
 
 																			@Override
 																			public void accept(List<PaymentInstruction> list, PaymentInstruction pmntInstr) {
@@ -209,9 +217,12 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 																		},
 																	(list1, list2) -> list1.addAll(list2));
 		
-		batch.setPayments(cleanedList);
+		batchCanonical.setPayments(cleanedList);*/
 		
-		return batch;
+		batchCanonical.getPayments().removeIf(payment -> failedPaymentIds.contains(payment.getInstrctnId()));
+		paymentEntities.removeIf(entity -> failedPaymentIds.contains(entity.getPaymentId()));
+		
+		return batchCanonical;
 	}
 		
 	@Override

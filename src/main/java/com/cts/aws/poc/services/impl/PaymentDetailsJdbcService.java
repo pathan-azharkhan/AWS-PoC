@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.kms.model.UnsupportedOperationException;
+import com.cts.aws.poc.constants.PaymentStatus;
 import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.models.FailedPayment;
 import com.cts.aws.poc.models.PaymentBatch;
@@ -44,14 +45,19 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 	public void updatePaymentsOnValidationFailure(List<FailedPayment> failedPayments) {
 		throw new UnsupportedOperationException("This operation is currently not supported by JDBC service");
 	}
+	
+	@Override
+	public void updatePaymentsOnFileDispatch(List<PaymentDetails> payments, PaymentStatus paymentStatus) {
+		throw new UnsupportedOperationException("This operation is currently not supported by JDBC service");
+	}
 
 	/**
-	 * Region -> Status, Count
+	 * Region = {(Status = Count)}
 	 */
 	@Override
 	public Map<String, Map<String, Integer>> getDashboardData(Date selectedDate) {
 		
-		List<DashboardData> list = jdbcTemplate.query(QUERY, new Object[] { selectedDate }, new RowMapper<DashboardData>() {
+		List<DashboardData> listFromDB = jdbcTemplate.query(QUERY, new Object[] { selectedDate }, new RowMapper<DashboardData>() {
 
 			@Override
 			public DashboardData mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -59,10 +65,12 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 			}
 		});
 		
-		Map<String, List<DashboardData>> map = list.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
+		Map<String, List<DashboardData>> dataGroupedByRegion = listFromDB.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
 		
 		Map<String, Integer> statusMap = new HashMap<>();
-		map.forEach((region, dataList) -> {
+		Map<String, Map<String, Integer>> response = new HashMap<>();
+		
+		dataGroupedByRegion.forEach((region, dataList) -> {
 			
 			dataList.forEach(data -> {
 				
@@ -72,9 +80,11 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 					statusMap.put(data.getStatus(), statusMap.get(data.getStatus()) + data.getCount());
 				}
 			});
+			
+			response.put(region, statusMap);
 		});
 		
-		return null;
+		return response;
 	}
 }
 

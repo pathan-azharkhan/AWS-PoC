@@ -95,7 +95,19 @@ public class PaymentDetailsJPAService implements PaymentDetailsPersistenceServic
 	
 	@Override
 	public Map<String, Map<String, Integer>> getDashboardData(Date selectedDate) {
-		
 		throw new UnsupportedOperationException("This operation is currently not supported by JPA service");
+	}
+
+	@Override
+	public void updatePaymentsOnFileDispatch(List<PaymentDetails> payments, PaymentStatus paymentStatus) {
+		
+		payments.forEach(payment -> {
+			
+			payment.setStatus(paymentStatus.name());
+			payment.setUpdatedBy(SystemConstants.SYSTEM);
+			payment.setUpdatedDate(new Date());
+		});
+		
+		paymentRepository.save(payments);
 	}
 }
