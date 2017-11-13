@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.cts.aws.poc.dao.helper;
+package com.cts.aws.poc.services.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.amazonaws.services.kms.model.UnsupportedOperationException;
 import com.cts.aws.poc.constants.PaymentStatus;
 import com.cts.aws.poc.constants.SystemConstants;
 import com.cts.aws.poc.dao.PaymentDetails;
@@ -95,6 +96,6 @@ public class PaymentDetailsJPAService implements PaymentDetailsPersistenceServic
 	@Override
 	public Map<String, Map<String, Integer>> getDashboardData(Date selectedDate) {
 		
-		return null;
+		throw new UnsupportedOperationException("This operation is currently not supported by JPA service");
 	}
 }
