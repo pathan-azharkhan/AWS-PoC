@@ -17,7 +17,7 @@ public interface FileStorageService {
 
 	void store(MultipartFile file);
 	
-	DeferredResult<Boolean> store(String fileContents);
+	DeferredResult<Boolean> store(String fileName, String fileContents);
 	
 	File retrieve(String fileName);
 	

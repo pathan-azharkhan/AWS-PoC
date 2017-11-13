@@ -6,7 +6,6 @@ package com.cts.aws.poc.services.impl;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,7 +71,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 	}
 	
 	@Override
-	public DeferredResult<Boolean> store(String fileContents) {
+	public DeferredResult<Boolean> store(String fileName, String fileContents) {
 		
 		DeferredResult<Boolean> deferredResult = new DeferredResult<>();
 		
@@ -85,8 +84,6 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			
 			String md5Base64 = new String(Base64Utils.encode(md5));
 			objectMetadata.setContentMD5(md5Base64);
-			
-			String fileName = new StringBuilder(LocalDate.now().toString()).append(".").append(System.currentTimeMillis()).append(".txt").toString();
 			
 			Upload uploadTracker = transferManager.upload(new PutObjectRequest(outboundBucketName, fileName, new ByteArrayInputStream(fileContents.getBytes()), objectMetadata));
 			

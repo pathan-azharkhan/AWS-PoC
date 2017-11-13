@@ -11,25 +11,25 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import com.cts.aws.poc.constants.FailureType;
+import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.exceptions.ValidationException;
 import com.cts.aws.poc.models.FailedPayment;
-import com.cts.aws.poc.models.PaymentBatch;
 
 /**
  * @author Azharkhan
  *
  */
 @Component
-public class BusinessDateValidator implements BusinessValidator<PaymentBatch> {
+public class BusinessDateValidator implements BusinessValidator<List<PaymentDetails>> {
 
 	@Override
-	public boolean validate(PaymentBatch input) throws ValidationException {
+	public boolean validate(List<PaymentDetails> input) throws ValidationException {
 		
 		LocalDate date = LocalDate.now();
 		
 		List<FailedPayment> failedPayments = new ArrayList<>();
 		
-		input.getPayments().parallelStream().forEach(payment -> {
+		input.parallelStream().forEach(payment -> {
 			
 			if (payment.getValueDate() == null || !date.equals(payment.getValueDate())) {
 				

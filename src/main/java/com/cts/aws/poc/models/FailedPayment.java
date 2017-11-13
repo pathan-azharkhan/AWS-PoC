@@ -4,6 +4,7 @@
 package com.cts.aws.poc.models;
 
 import com.cts.aws.poc.constants.FailureType;
+import com.cts.aws.poc.dao.PaymentDetails;
 
 /**
  * @author Azharkhan
@@ -15,9 +16,9 @@ public class FailedPayment {
 	
 	private String failureReason;
 	
-	private PaymentInstruction payment;
+	private PaymentDetails payment;
 
-	public FailedPayment(FailureType failureType, String failureReason, PaymentInstruction payment) {
+	public FailedPayment(FailureType failureType, String failureReason, PaymentDetails payment) {
 		
 		super();
 		this.payment = payment;
@@ -33,7 +34,7 @@ public class FailedPayment {
 		return failureReason;
 	}
 
-	public PaymentInstruction getPayment() {
+	public PaymentDetails getPayment() {
 		return payment;
 	}
 

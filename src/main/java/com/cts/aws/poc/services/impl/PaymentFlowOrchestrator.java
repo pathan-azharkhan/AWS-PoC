@@ -6,21 +6,34 @@ package com.cts.aws.poc.services.impl;
 import iso.std.iso._20022.tech.xsd.pain_001_001.Document;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
+import org.springframework.web.context.request.async.DeferredResult.DeferredResultHandler;
 
+import com.cts.aws.poc.constants.PayloadStatus;
+import com.cts.aws.poc.dao.Payload;
+import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.exceptions.SystemException;
 import com.cts.aws.poc.exceptions.ValidationException;
+import com.cts.aws.poc.models.FailedPayment;
 import com.cts.aws.poc.models.PaymentBatch;
+import com.cts.aws.poc.models.PaymentInstruction;
 import com.cts.aws.poc.services.FileFormatTransformer;
 import com.cts.aws.poc.services.FileStorageService;
 import com.cts.aws.poc.services.FlowOrchestrator;
+import com.cts.aws.poc.services.PayloadPersistenceService;
+import com.cts.aws.poc.services.PaymentDetailsPersistenceService;
 import com.cts.aws.poc.validations.BusinessValidator;
 import com.cts.aws.poc.validations.FormatValidator;
 
@@ -45,19 +58,25 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 	
 	@Autowired
 	@Qualifier("businessDateValidator")
-	private BusinessValidator<PaymentBatch> businessDateValidator;
+	private BusinessValidator<List<PaymentDetails>> businessDateValidator;
 	
 	@Autowired
 	@Qualifier("txnAmountValidator")
-	private BusinessValidator<PaymentBatch> txnAmntValidator;
+	private BusinessValidator<List<PaymentDetails>> txnAmntValidator;
 
-	private Predicate<PaymentBatch> businessValidationPredicate;
+	private Predicate<List<PaymentDetails>> businessValidationPredicate;
 	
 	@Autowired
 	private FileFormatTransformer<PaymentBatch, String> outboundFileTransformer;
 	
 	@Autowired
 	private FormatValidator<String> outputFormatValidator;
+	
+	@Autowired
+	private PayloadPersistenceService payloadService;
+	
+	@Autowired
+	private PaymentDetailsPersistenceService paymentsService;
 	
 	@Override
 	public void process(String fileName) {
@@ -87,7 +106,8 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 			// Pull file from AWS S3
 			File inputFile = fileStorageService.retrieve(fileName);
 			
-			// TODO: Save to Inbound table
+			// Save to Inbound table
+			Payload inboundPayload = payloadService.persistInboundPayload(inputFile);
 			
 			// Parse file
 			Document document = inboundFileParser.parseFile(inputFile);
@@ -97,47 +117,109 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				inputFormatValidator.validate(document);
 			} catch (ValidationException e) {
 				
-				// TODO: Update status of Inbound record for failure
+				// Update status of Inbound record for failure
+				payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.ERROR);
+				
 				throw new SystemException("Format Validation of input failed", e);
 			}
 			
 			// Transform the Inbound file to Canonical
 			PaymentBatch paymentBatch = inboundFileTransformer.transform(document);
 			
-			// TODO: Save payments to DB
+			// Save payments to DB
+			List<PaymentDetails> savedPayments = paymentsService.persistNewBatch(paymentBatch);
 			
 			// Validate the canonical for business scenarios
-			businessValidationPredicate.test(paymentBatch);
-			
-			// TODO: Update payment statuses in case of Business validation failures
+			try {
+				businessValidationPredicate.test(savedPayments);
+			} catch (SystemException se) {
+				
+				// Update payment statuses in case of Business validation failures
+				ValidationException validationEx = (ValidationException) se.getCause();
+				paymentsService.updatePaymentsOnValidationFailure(validationEx.getFailedPayments());
+				
+				// Remove failed payments from the payment batch
+				paymentBatch = cleanPaymentBatch(paymentBatch, validationEx.getFailedPayments());
+			}
 			
 			// Transform the Canonical to Outbound file format
 			String outboundFileContent = outboundFileTransformer.transform(paymentBatch);
 			
-			// TODO: Save to Outbound table
+			String fileName = new StringBuilder(LocalDate.now().toString()).append(".").append(System.currentTimeMillis()).append(".txt").toString();
+			
+			// Save to Outbound table
+			Payload outboundPayload = payloadService.persistOutboundPayload(fileName);
 			
 			// Validate the format of the outgoing file
 			try {
 				outputFormatValidator.validate(outboundFileContent);
 			} catch (ValidationException e) {
 				
-				// TODO: Update status of Outbound record for failure
+				// Update status of Outbound record for failure
+				payloadService.updatePayloadStatus(outboundPayload, PayloadStatus.ERROR);
+				
 				throw new SystemException("Format Validation of output failed", e);
 			}
 			
 			// Publish the output file to downstream S3 bucket
-			DeferredResult<Boolean> deferredResult = fileStorageService.store(outboundFileContent);
-			
-			// TODO: Update statuses in RDS
+			DeferredResult<Boolean> deferredResult = fileStorageService.store(fileName, outboundFileContent);
+			deferredResult.setResultHandler(new FileDispatchResultHandler(inboundPayload, outboundPayload));
 		}
 	}
+	
+	private class FileDispatchResultHandler implements DeferredResultHandler {
+		
+		private final Payload inboundPayload;
+		
+		private final Payload outboundPayload;
+		
+		FileDispatchResultHandler(Payload inboundPayload, Payload outboundPayload) {
+			
+			super();
+			this.inboundPayload = inboundPayload;
+			this.outboundPayload = outboundPayload;
+		}
 
+		@Override
+		public void handleResult(Object result) {
+			
+			PayloadStatus payloadStatus = PayloadStatus.FAILED;
+			
+			if (Boolean.class.cast(result))
+				payloadStatus = PayloadStatus.SENT;
+			
+			// Update statuses in RDS
+			payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.PROCESSED);
+			payloadService.updatePayloadStatus(outboundPayload, payloadStatus);
+		}
+	}
+	
+	private PaymentBatch cleanPaymentBatch(PaymentBatch batch, List<FailedPayment> failedPayments) {
+		
+		List<String> failedPaymentIds = failedPayments.parallelStream().map(failedPayment -> failedPayment.getPayment().getPaymentId()).collect(Collectors.toList());
+		
+		List<PaymentInstruction> cleanedList = batch.getPayments().parallelStream().collect(ArrayList::new, new BiConsumer<List<PaymentInstruction>, PaymentInstruction>() {
+
+																			@Override
+																			public void accept(List<PaymentInstruction> list, PaymentInstruction pmntInstr) {
+																				
+																				if (!failedPaymentIds.contains(pmntInstr.getInstrctnId()))
+																					list.add(pmntInstr);
+																			}
+																		},
+																	(list1, list2) -> list1.addAll(list2));
+		
+		batch.setPayments(cleanedList);
+		
+		return batch;
+	}
+		
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		
-		businessValidationPredicate = (paymentBatch) -> { 
+		businessValidationPredicate = (payments) -> { 
 						try {
-						return businessDateValidator.validate(paymentBatch) && txnAmntValidator.validate(paymentBatch);
+						return businessDateValidator.validate(payments) && txnAmntValidator.validate(payments);
 					} catch (ValidationException e) {
 						
 						throw new SystemException("Business Validation failed", e);

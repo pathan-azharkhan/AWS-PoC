@@ -11,29 +11,29 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.cts.aws.poc.constants.FailureType;
+import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.exceptions.ValidationException;
 import com.cts.aws.poc.models.FailedPayment;
-import com.cts.aws.poc.models.PaymentBatch;
 
 /**
  * @author Azharkhan
  *
  */
 @Component
-public class TxnAmountValidator implements BusinessValidator<PaymentBatch> {
+public class TxnAmountValidator implements BusinessValidator<List<PaymentDetails>> {
 
 	@Override
-	public boolean validate(PaymentBatch input) throws ValidationException {
+	public boolean validate(List<PaymentDetails> input) throws ValidationException {
 
 		List<FailedPayment> failedPayments = new ArrayList<>();
 		
-		input.getPayments().parallelStream().forEach(payment -> {
+		input.parallelStream().forEach(payment -> {
 			
-			if (payment.getTxnAmnt() < 0) {
+			if (payment.getTxnAmount() < 0) {
 				
 				failedPayments.add(new FailedPayment(FailureType.INVALID_TXN_AMNT, "Invalid transaction amount", payment));
 			}
-			if (StringUtils.isBlank(payment.getCurrency())) {
+			if (StringUtils.isBlank(payment.getTxnCurrency())) {
 				
 				failedPayments.add(new FailedPayment(FailureType.INVALID_TXN_CCY, "Invalid transaction currency", payment));
 			}
