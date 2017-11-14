@@ -19,8 +19,16 @@ public abstract class GeographyUtil {
 	static {
 		
 		APAC_CURRENCIES.add("INR");
-		APAC_CURRENCIES.add("SGP");
+		APAC_CURRENCIES.add("SGD");
+		APAC_CURRENCIES.add("AUD");
+		APAC_CURRENCIES.add("JPY");
+		APAC_CURRENCIES.add("CNY");
+		APAC_CURRENCIES.add("SAR");
+		APAC_CURRENCIES.add("AED");
 		
+		EUR_CURRENCIES.add("EUR");
+		EUR_CURRENCIES.add("CHF");
+		EUR_CURRENCIES.add("RUB");
 		EUR_CURRENCIES.add("GBP");
 		EUR_CURRENCIES.add("SEK");
 		EUR_CURRENCIES.add("DKK");
