@@ -33,7 +33,7 @@ import com.cts.aws.poc.exceptions.ValidationException;
  * @author Azharkhan
  *
  */
-@Component
+@Component("xmlFormatValidator")
 public class XMLFormatValidator implements FormatValidator<File> {
 
 	private static final String XML_SCHEMA = "pain.001.001.03.xsd";

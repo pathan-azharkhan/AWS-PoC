@@ -40,6 +40,7 @@ import com.cts.aws.poc.validations.FormatValidator;
  *
  */
 @Component
+@SuppressWarnings("rawtypes")
 public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBean {
 	
 	@Autowired
@@ -49,26 +50,30 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 	private InboundXMLFileParser inboundFileParser;
 	
 	@Autowired
-	private FormatValidator<Document> inputFormatValidator;
+	@Qualifier("xmlFormatValidator")
+	private FormatValidator inputFormatValidator;
 
 	@Autowired
-	private FileFormatTransformer<Document, PaymentBatch> inboundFileTransformer;
+	@Qualifier("inboundFileFormatTransformer")
+	private FileFormatTransformer inboundFileTransformer;
 	
 	@Autowired
 	@Qualifier("businessDateValidator")
-	private BusinessValidator<List<PaymentDetails>> businessDateValidator;
+	private BusinessValidator businessDateValidator;
 	
 	@Autowired
 	@Qualifier("txnAmountValidator")
-	private BusinessValidator<List<PaymentDetails>> txnAmntValidator;
+	private BusinessValidator txnAmntValidator;
 
 	private Predicate<List<PaymentDetails>> businessValidationPredicate;
 	
 	@Autowired
-	private FileFormatTransformer<PaymentBatch, String> outboundFileTransformer;
+	@Qualifier("proprietoryFileFormatTransformer")
+	private FileFormatTransformer outboundFileTransformer;
 	
 	@Autowired
-	private FormatValidator<String> outputFormatValidator;
+	@Qualifier("proprietoryFormatValidator")
+	private FormatValidator outputFormatValidator;
 	
 	@Autowired
 	private PayloadPersistenceService payloadService;
@@ -99,6 +104,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public void run() {
 			
 			// Pull file from AWS S3
@@ -122,7 +128,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 			}
 			
 			// Transform the Inbound file to Canonical
-			PaymentBatch paymentBatch = inboundFileTransformer.transform(document);
+			PaymentBatch paymentBatch = (PaymentBatch) inboundFileTransformer.transform(document);
 			
 			// Save payments to DB
 			List<PaymentDetails> savedPayments = paymentsService.persistNewBatch(paymentBatch);
@@ -141,7 +147,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 			}
 			
 			// Transform the Canonical to Outbound file format
-			String outboundFileContent = outboundFileTransformer.transform(paymentBatch);
+			String outboundFileContent = (String) outboundFileTransformer.transform(paymentBatch);
 			
 			String fileName = new StringBuilder(LocalDate.now().toString()).append(".").append(System.currentTimeMillis()).append(".txt").toString();
 			
@@ -226,6 +232,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 	}
 		
 	@Override
+	@SuppressWarnings("unchecked")
 	public void afterPropertiesSet() throws Exception {
 		
 		businessValidationPredicate = (payments) -> { 

@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.aws.autoconfigure.context.ContextStackAutoConfiguration;
 import org.springframework.cloud.aws.context.config.annotation.EnableContextResourceLoader;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -18,6 +20,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 @Configuration
 @ComponentScan(basePackages = { "com.cts.aws.poc" })
+@EntityScan("com.cts.aws.poc.dao")
+@EnableJpaRepositories("com.cts.aws.poc.dao")
 @PropertySource("classpath:application.properties")
 @EnableContextResourceLoader
 @EnableAutoConfiguration(exclude = { ContextStackAutoConfiguration.class })
