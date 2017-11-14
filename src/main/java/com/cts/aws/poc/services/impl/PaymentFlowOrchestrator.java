@@ -79,6 +79,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 	private PayloadPersistenceService payloadService;
 	
 	@Autowired
+	@Qualifier("paymentDetailsJPAService")
 	private PaymentDetailsPersistenceService paymentsService;
 	
 	@Override
