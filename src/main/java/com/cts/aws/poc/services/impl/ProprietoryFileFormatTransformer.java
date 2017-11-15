@@ -39,7 +39,7 @@ public class ProprietoryFileFormatTransformer implements FileFormatTransformer<P
 			builder.append(LINE_FEED);
 		});
 		
-		Assert.hasText(builder.toString());
+		Assert.hasText(builder.toString(), "Generated message cannot be empty");
 		
 		return builder.toString();
 	}
