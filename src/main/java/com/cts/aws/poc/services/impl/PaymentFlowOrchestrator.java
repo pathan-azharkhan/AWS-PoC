@@ -89,7 +89,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 						.whenComplete((result, throwable) -> {
 										
 										if (throwable != null) {
-											// TODO: Mark the payment file as error-ed
+											throwable.printStackTrace();
 										}
 									});
 	}
@@ -119,7 +119,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 			
 			// Validate the format of the incoming file
 			try {
-				inputFormatValidator.validate(document);
+				inputFormatValidator.validate(inputFile);
 			} catch (ValidationException e) {
 				
 				// Update status of Inbound record for failure

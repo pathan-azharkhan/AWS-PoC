@@ -12,14 +12,13 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.w3c.dom.Document;
@@ -36,7 +35,7 @@ import com.cts.aws.poc.exceptions.ValidationException;
 @Component("xmlFormatValidator")
 public class XMLFormatValidator implements FormatValidator<File> {
 
-	private static final String XML_SCHEMA = "pain.001.001.03.xsd";
+	private static final String XML_SCHEMA = "/pain.001.001.03.xsd";
 	
 	public boolean validate(File file) throws ValidationException {
 
@@ -53,8 +52,7 @@ public class XMLFormatValidator implements FormatValidator<File> {
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
 			// load a WXS schema, represented by a Schema instance
-			Source schemaFile = new StreamSource(new File(XML_SCHEMA));
-			schema = factory.newSchema(schemaFile);
+			schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
 
 			// create a Validator instance, which can be used to validate an instance document
 			Validator validator = schema.newValidator();

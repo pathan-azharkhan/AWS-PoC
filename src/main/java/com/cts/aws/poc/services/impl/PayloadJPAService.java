@@ -33,7 +33,7 @@ public class PayloadJPAService implements PayloadPersistenceService {
 		Payload inboundPayload = new Payload();
 		
 		inboundPayload.setPayloadId(UUID.randomUUID().toString());
-		inboundPayload.setPayloadName(inboundFile.getName());
+		inboundPayload.setName(inboundFile.getName());
 		inboundPayload.setPayloadType(PayloadType.INBOUND.getIdentifier());
 		inboundPayload.setStatus(PayloadStatus.NEW.name());
 		inboundPayload.setCreatedBy(SystemConstants.SYSTEM);
@@ -48,7 +48,7 @@ public class PayloadJPAService implements PayloadPersistenceService {
 		Payload outboundPayload = new Payload();
 		
 		outboundPayload.setPayloadId(UUID.randomUUID().toString());
-		outboundPayload.setPayloadName(fileName);
+		outboundPayload.setName(fileName);
 		outboundPayload.setPayloadType(PayloadType.OUTBOUND.getIdentifier());
 		outboundPayload.setStatus(PayloadStatus.CREATED.name());
 		outboundPayload.setCreatedBy(SystemConstants.SYSTEM);

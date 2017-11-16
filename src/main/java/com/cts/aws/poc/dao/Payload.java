@@ -18,7 +18,7 @@ public class Payload {
 	@Id
 	private String payloadId;
 	
-	private String payloadName;
+	private String name;
 	
 	private String batchId;
 	
@@ -42,12 +42,12 @@ public class Payload {
 		this.payloadId = payloadId;
 	}
 
-	public String getPayloadName() {
-		return payloadName;
+	public String getName() {
+		return name;
 	}
 
-	public void setPayloadName(String payloadName) {
-		this.payloadName = payloadName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getBatchId() {
@@ -109,7 +109,7 @@ public class Payload {
 	@Override
 	public String toString() {
 		return "Payload [payloadId=" + payloadId + ", payloadName="
-				+ payloadName + ", batchId=" + batchId + ", payloadType="
+				+ name + ", batchId=" + batchId + ", payloadType="
 				+ payloadType + ", status=" + status + ", createdDate="
 				+ createdDate + ", createdBy=" + createdBy + ", updatedDate="
 				+ updatedDate + ", updatedBy=" + updatedBy + "]";
