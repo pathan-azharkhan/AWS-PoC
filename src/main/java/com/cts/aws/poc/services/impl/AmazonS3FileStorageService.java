@@ -45,10 +45,13 @@ public class AmazonS3FileStorageService implements FileStorageService {
 	@Value("${amazon.s3.outbound.bucket.name}")
 	private String outboundBucketName;
 	
-	@Autowired
-	private AmazonS3 s3Client;
+	private TransferManager transferManager;
 	
-	private TransferManager transferManager = TransferManagerBuilder.defaultTransferManager();
+	@Autowired
+	public AmazonS3FileStorageService(AmazonS3 s3Client) {
+		
+		transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+	}
 	
 	@Override
 	public void store(MultipartFile file) {
@@ -107,7 +110,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 	@Override
 	public List<String> listBuckets() {
 		
-		return s3Client.listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
+		return transferManager.getAmazonS3Client().listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
 	}
 
 	@Override
@@ -115,7 +118,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 		
 		File downloadedFile = new File(fileName);
 		
-		s3Client.getObject(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
+		transferManager.download(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
 		
 		System.out.println("Downloaded file size: " + downloadedFile.length());
 		
