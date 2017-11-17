@@ -14,6 +14,7 @@ import com.cts.aws.poc.constants.FailureType;
 import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.exceptions.ValidationException;
 import com.cts.aws.poc.models.FailedPayment;
+import com.cts.aws.poc.utils.DateUtils;
 
 /**
  * @author Azharkhan
@@ -31,7 +32,7 @@ public class BusinessDateValidator implements BusinessValidator<List<PaymentDeta
 		
 		input.parallelStream().forEach(payment -> {
 			
-			if (payment.getValueDate() == null || !date.equals(payment.getValueDate())) {
+			if (payment.getValueDate() == null || !DateUtils.getDateFromLocalDate(date).equals(payment.getValueDate())) {
 				
 				failedPayments.add(new FailedPayment(FailureType.INVALID_BUSINESS_DATE, "Value date is not current date", payment));
 			}

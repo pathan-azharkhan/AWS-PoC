@@ -22,6 +22,7 @@ import com.cts.aws.poc.dao.PaymentDetails;
 import com.cts.aws.poc.models.FailedPayment;
 import com.cts.aws.poc.models.PaymentBatch;
 import com.cts.aws.poc.services.PaymentDetailsPersistenceService;
+import com.cts.aws.poc.utils.DateUtils;
 import com.cts.aws.poc.utils.GeographyUtil;
 
 /**
@@ -31,10 +32,12 @@ import com.cts.aws.poc.utils.GeographyUtil;
 @Service
 public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceService {
 	
-	private static final String QUERY = "SELECT status, txnCurrency, count(*) FROM payment_details group by status, txnCurrency where valueDate = :valueDate";
+	private static final String QUERY = "SELECT status, txn_currency, count(*) FROM payment_details where value_date = ? group by status, txn_currency";
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
+	
 
 	@Override
 	public List<PaymentDetails> persistNewBatch(PaymentBatch batch) {
@@ -57,7 +60,7 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 	@Override
 	public Map<String, Map<String, Integer>> getDashboardData(Date selectedDate) {
 		
-		List<DashboardData> listFromDB = jdbcTemplate.query(QUERY, new Object[] { selectedDate }, new RowMapper<DashboardData>() {
+		List<DashboardData> listFromDB = jdbcTemplate.query(QUERY, new Object[] { DateUtils.MYSQL_DATE_FORMAT.format(selectedDate) }, new RowMapper<DashboardData>() {
 
 			@Override
 			public DashboardData mapRow(ResultSet rs, int rowNum) throws SQLException {

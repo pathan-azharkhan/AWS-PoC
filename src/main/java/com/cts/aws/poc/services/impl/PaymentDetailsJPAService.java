@@ -24,6 +24,7 @@ import com.cts.aws.poc.dao.PaymentErrorsRepository;
 import com.cts.aws.poc.models.FailedPayment;
 import com.cts.aws.poc.models.PaymentBatch;
 import com.cts.aws.poc.services.PaymentDetailsPersistenceService;
+import com.cts.aws.poc.utils.DateUtils;
 
 /**
  * @author Azharkhan
@@ -54,6 +55,7 @@ public class PaymentDetailsJPAService implements PaymentDetailsPersistenceServic
 			payment.setTxnAmount(pmntInstr.getTxnAmnt());
 			payment.setTxnCurrency(pmntInstr.getCurrency());
 			payment.setStatus(PaymentStatus.NEW.name());
+			payment.setValueDate(DateUtils.getDateFromLocalDate(pmntInstr.getValueDate()));
 			payment.setCreatedBy(SystemConstants.SYSTEM);
 			payment.setCreatedDate(new Date());
 			
