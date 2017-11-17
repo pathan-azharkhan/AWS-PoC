@@ -5,6 +5,7 @@ package com.cts.aws.poc.services.impl;
 
 import java.time.format.DateTimeFormatter;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -20,6 +21,8 @@ import com.cts.aws.poc.services.FileFormatTransformer;
 public class ProprietoryFileFormatTransformer implements FileFormatTransformer<PaymentBatch, String> {
 	
 	private static final String LINE_FEED = "\n";
+	
+	private static final String SEMI_COLON = ";";
 	
 	private static final String INSTN_ID = "JPMORG";
 	
@@ -65,9 +68,9 @@ public class ProprietoryFileFormatTransformer implements FileFormatTransformer<P
 		builder.append(payment.getTxnAmnt()).append("|");
 		builder.append(payment.getCurrency()).append("|");
 		
-		builder.append(payment.getDebtor().getBankCode()).append(".").append(payment.getDebtor().getBranchCode()).append("|");
+		builder.append(payment.getDebtor().getBankCode()).append(StringUtils.isNotBlank(payment.getDebtor().getBranchCode()) ? SEMI_COLON.concat(payment.getDebtor().getBranchCode()) : "").append("|");
 		builder.append(payment.getDebtor().getAccountId()).append("|");
-		builder.append(payment.getCreditor().getBankCode()).append(".").append(payment.getCreditor().getBranchCode()).append("|");
+		builder.append(payment.getCreditor().getBankCode()).append(StringUtils.isNotBlank(payment.getDebtor().getBranchCode()) ? SEMI_COLON.concat(payment.getDebtor().getBranchCode()) : "").append("|");
 		builder.append(payment.getCreditor().getAccountId());
 		
 		return builder.toString();

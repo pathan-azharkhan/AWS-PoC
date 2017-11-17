@@ -9,10 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -21,7 +18,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.w3c.dom.Document;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -39,20 +35,12 @@ public class XMLFormatValidator implements FormatValidator<File> {
 	
 	public boolean validate(File file) throws ValidationException {
 
-		// parse an XML document into a DOM tree
-		DocumentBuilder parser;
-
-		Document document;
-		Schema schema;
 		try {
-			parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			document = parser.parse(file);
-
 			// create a SchemaFactory capable of understanding WXS schemas
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
 			// load a WXS schema, represented by a Schema instance
-			schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
+			Schema schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
 
 			// create a Validator instance, which can be used to validate an instance document
 			Validator validator = schema.newValidator();
@@ -61,15 +49,15 @@ public class XMLFormatValidator implements FormatValidator<File> {
 			
 			validator.setErrorHandler(new SchemaValidationErrorHandler(validationErrors));
 
-			// validate the DOM tree
-			validator.validate(new DOMSource(document));
+			// validate the XML file
+			validator.validate(new StreamSource(file));
 			
 			if (CollectionUtils.isEmpty(validationErrors))
 				return true;
 			else
 				throw new ValidationException("Format Validation failed for input XML", validationErrors);
 			
-		} catch (ParserConfigurationException | SAXException | IOException e) {
+		} catch (SAXException | IOException e) {
 			throw new ValidationException("Failed in Format Validation of input XML", e);
 		}
 	}

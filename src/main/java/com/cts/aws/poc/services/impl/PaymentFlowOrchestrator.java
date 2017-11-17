@@ -145,6 +145,13 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				
 				// Remove failed payments from the payment batch canonical and Entity list
 				paymentBatch = cleanPaymentBatch(paymentBatch, savedPayments, validationEx.getFailedPayments());
+				
+				// Check if at all the batch has any payments remaining to be processed further
+				if (paymentBatch.getTotalTxns() == 0) {
+
+					System.err.println("No payments in batch to process!");
+					return;
+				}
 			}
 			
 			// Transform the Canonical to Outbound file format
@@ -228,6 +235,9 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		
 		batchCanonical.getPayments().removeIf(payment -> failedPaymentIds.contains(payment.getInstrctnId()));
 		paymentEntities.removeIf(entity -> failedPaymentIds.contains(entity.getPaymentId()));
+		
+		// Ppdate the NbOfTxns in the batch canonical accordingly, after removal of failed payments from under the batch
+		batchCanonical.setTotalTxns(batchCanonical.getPayments().size());
 		
 		return batchCanonical;
 	}
