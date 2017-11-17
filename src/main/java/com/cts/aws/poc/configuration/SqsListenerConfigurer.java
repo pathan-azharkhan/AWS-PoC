@@ -6,6 +6,8 @@ package com.cts.aws.poc.configuration;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ import com.cts.aws.poc.services.FlowOrchestrator;
 @Component
 public class SqsListenerConfigurer {
 	
+	private static final Logger LOGGER = LogManager.getLogger(SqsListenerConfigurer.class);
+	
 	private static final String QUEUE_NAME = "S3NotificationQueue";
 	
 	@Autowired
@@ -30,14 +34,14 @@ public class SqsListenerConfigurer {
 	@SqsListener(QUEUE_NAME)
 	public void onS3EventNotification(String message) {
 		
-		System.out.println("Message received from SQS: " + message);
+		LOGGER.info("Message received from SQS~{}. Contents: {}", QUEUE_NAME, message);
 		
 		S3EventNotification eventNotification = S3EventNotification.parseJson(message);
 		List<S3EventNotificationRecord> records = eventNotification.getRecords();
 		
 		if (CollectionUtils.isNotEmpty(records)) {
 			
-			System.out.println(String.format("Publishing %d file(s) to Orchestrator", records.size()));
+			LOGGER.info("Publishing {} file(s) to Orchestrator", records.size());
 			
 			records.parallelStream().forEach(record -> {
 

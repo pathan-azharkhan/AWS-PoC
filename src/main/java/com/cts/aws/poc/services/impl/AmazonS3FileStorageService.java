@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -38,6 +40,8 @@ import com.cts.aws.poc.services.FileStorageService;
  */
 @Component
 public class AmazonS3FileStorageService implements FileStorageService {
+	
+	private static final Logger LOGGER = LogManager.getLogger(AmazonS3FileStorageService.class);
 	
 	@Value("${amazon.s3.inbound.bucket.name}")
 	private String inboundBucketName;
@@ -68,8 +72,15 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			
 			transferManager.upload(new PutObjectRequest(inboundBucketName, file.getOriginalFilename(), file.getInputStream(), objectMetadata));
 			
-		} catch (AmazonClientException | IOException e) {
-			e.printStackTrace();
+			LOGGER.info("Uploaded file {} to S3 bucket {}", file.getOriginalFilename(), inboundBucketName);
+			
+		} catch (AmazonClientException e) {
+			
+			LOGGER.error("Failed to upload file {} to S3. Reason: {}", file.getOriginalFilename(), e);
+			
+		} catch (IOException e) {
+			
+			LOGGER.error("Failed to read file {}. Reason: {}", file.getOriginalFilename(), e);
 		}
 	}
 	
@@ -89,6 +100,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			objectMetadata.setContentMD5(md5Base64);
 			
 			Upload uploadTracker = transferManager.upload(new PutObjectRequest(outboundBucketName, fileName, new ByteArrayInputStream(fileContents.getBytes()), objectMetadata));
+			LOGGER.info("Initiated upload of file {} to S3 bucket {}", fileName, outboundBucketName);
 			
 			uploadTracker.addProgressListener(new ProgressListener() {
 				
@@ -102,6 +114,8 @@ public class AmazonS3FileStorageService implements FileStorageService {
 				}
 			});
 		} catch (AmazonClientException e) {
+			
+			LOGGER.error("Failed to upload file {} to S3 bucket {}. Reason: {}", fileName, outboundBucketName, e);
 			deferredResult.setErrorResult(e);
 		}
 		return deferredResult;
@@ -120,7 +134,8 @@ public class AmazonS3FileStorageService implements FileStorageService {
 		
 		transferManager.download(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
 		
-		System.out.println("Downloaded file size: " + downloadedFile.length());
+		LOGGER.info("Downloaded file: {} from S3 bucket {}", fileName, inboundBucketName);
+		LOGGER.debug("Downloaded file size: {}", downloadedFile.length());
 		
 		return downloadedFile;
 	}

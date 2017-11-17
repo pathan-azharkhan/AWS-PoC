@@ -8,11 +8,8 @@ import iso.std.iso._20022.tech.xsd.pain_001_001.Document;
 import iso.std.iso._20022.tech.xsd.pain_001_001.GroupHeader32;
 import iso.std.iso._20022.tech.xsd.pain_001_001.PaymentInstructionInformation3;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.springframework.stereotype.Component;
 
@@ -20,6 +17,7 @@ import com.cts.aws.poc.models.PaymentBatch;
 import com.cts.aws.poc.models.PaymentInstruction;
 import com.cts.aws.poc.models.PaymentParty;
 import com.cts.aws.poc.services.FileFormatTransformer;
+import com.cts.aws.poc.utils.DateUtils;
 
 /**
  * @author Azharkhan
@@ -51,7 +49,7 @@ public class InboundFileFormatTransformer implements FileFormatTransformer<Docum
 			CreditTransferTransactionInformation10 cdtTrfTxInf = pmtInf.getCdtTrfTxInf().get(0);
 			
 			pmntInstr.setInstrctnId(cdtTrfTxInf.getPmtId().getInstrId());
-			pmntInstr.setValueDate(gregorianCalendarToLocalDate(pmtInf.getReqdExctnDt()));
+			pmntInstr.setValueDate(DateUtils.gregorianCalendarToLocalDate(pmtInf.getReqdExctnDt()));
 			pmntInstr.setTxnAmnt(cdtTrfTxInf.getAmt().getInstdAmt().getValue().doubleValue());
 			pmntInstr.setCurrency(cdtTrfTxInf.getAmt().getInstdAmt().getCcy());
 			
@@ -75,10 +73,5 @@ public class InboundFileFormatTransformer implements FileFormatTransformer<Docum
 		batch.setPayments(pmntInstructions);
 		
 		return batch;
-	}
-	
-	public LocalDate gregorianCalendarToLocalDate(XMLGregorianCalendar gregorianCalendar) {
-		
-		return LocalDate.of(gregorianCalendar.getYear(), gregorianCalendar.getMonth(), gregorianCalendar.getDay());
 	}
 }

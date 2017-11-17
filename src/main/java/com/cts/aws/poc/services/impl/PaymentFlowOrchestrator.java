@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,6 +44,8 @@ import com.cts.aws.poc.validations.FormatValidator;
 @Component
 @SuppressWarnings("rawtypes")
 public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBean {
+	
+	private static final Logger LOGGER = LogManager.getLogger(PaymentFlowOrchestrator.class);
 	
 	@Autowired
 	private FileStorageService fileStorageService;
@@ -108,11 +112,15 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		@SuppressWarnings("unchecked")
 		public void run() {
 			
+			LOGGER.info("Beginning processing of file {} ...", fileName);
+			
 			// Pull file from AWS S3
 			File inputFile = fileStorageService.retrieve(fileName);
 			
 			// Save to Inbound table
 			Payload inboundPayload = payloadService.persistInboundPayload(inputFile);
+			
+			LOGGER.info("Saved new record bearing id {} to Payload table for file {}", inboundPayload.getPayloadId(), fileName);
 			
 			// Parse file
 			Document document = inboundFileParser.parseFile(inputFile);
@@ -122,22 +130,31 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				inputFormatValidator.validate(inputFile);
 			} catch (ValidationException e) {
 				
+				LOGGER.error("Format Validation of file {} failed!. Reason: {}", fileName, e);
 				// Update status of Inbound record for failure
 				payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.ERROR);
 				
 				throw new SystemException("Format Validation of input failed", e);
 			}
+			LOGGER.info("Format of file {} is valid", fileName);
 			
 			// Transform the Inbound file to Canonical
 			PaymentBatch paymentBatch = (PaymentBatch) inboundFileTransformer.transform(document);
 			
+			LOGGER.info("Transformed file {} to Canonical", fileName);
+			LOGGER.debug("Transformed Canonical -\n {}", paymentBatch);
+			
 			// Save payments to DB
 			List<PaymentDetails> savedPayments = paymentsService.persistNewBatch(paymentBatch);
+			
+			LOGGER.info("Persisted payments for batch id {}", paymentBatch.getBatchId());
 			
 			// Validate the canonical for business scenarios
 			try {
 				businessValidationPredicate.test(savedPayments);
 			} catch (SystemException se) {
+				
+				LOGGER.error("Business Validation of batch {} failed!. Reason: {}", paymentBatch.getBatchId(), se);
 				
 				// Update payment statuses in case of Business validation failures
 				ValidationException validationEx = (ValidationException) se.getCause();

@@ -6,8 +6,9 @@ package com.cts.aws.poc.services.impl;
 import java.time.format.DateTimeFormatter;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import com.cts.aws.poc.models.PaymentBatch;
 import com.cts.aws.poc.models.PaymentInstruction;
@@ -20,6 +21,8 @@ import com.cts.aws.poc.services.FileFormatTransformer;
 @Component
 public class ProprietoryFileFormatTransformer implements FileFormatTransformer<PaymentBatch, String> {
 	
+	private static final Logger LOGGER = LogManager.getLogger(ProprietoryFileFormatTransformer.class);
+	
 	private static final String LINE_FEED = "\n";
 	
 	private static final String SEMI_COLON = ";";
@@ -30,6 +33,8 @@ public class ProprietoryFileFormatTransformer implements FileFormatTransformer<P
 
 	@Override
 	public String transform(PaymentBatch input) {
+		
+		LOGGER.info("Generating output file for batch id {} with {} payments", input.getBatchId(), input.getTotalTxns());
 		
 		StringBuilder builder = new StringBuilder();
 		
@@ -42,7 +47,7 @@ public class ProprietoryFileFormatTransformer implements FileFormatTransformer<P
 			builder.append(LINE_FEED);
 		});
 		
-		Assert.hasText(builder.toString(), "Generated message cannot be empty");
+		LOGGER.debug("Generated output for batch id {} is -\n{}", input.getBatchId(), builder.toString());
 		
 		return builder.toString();
 	}

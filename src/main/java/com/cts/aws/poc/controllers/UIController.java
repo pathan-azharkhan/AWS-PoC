@@ -4,10 +4,11 @@
 package com.cts.aws.poc.controllers;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -30,6 +31,8 @@ import com.cts.aws.poc.utils.DateUtils;
 @Controller
 public class UIController {
 	
+	private static final Logger LOGGER = LogManager.getLogger(UIController.class);
+	
 	@Autowired
 	private FileStorageService fileStorageService;
 	
@@ -46,6 +49,8 @@ public class UIController {
 		fileStorageService.store(file);
 		
 		redirectAttributes.addFlashAttribute("message", "Successfully uploaded " + file.getOriginalFilename() + "!");
+		
+		LOGGER.info("Successfully processed upload request for file {}", file.getOriginalFilename());
 		
 		return "redirect:/file";
 	}
@@ -76,7 +81,7 @@ public class UIController {
 			return paymentService.getDashboardData(DateUtils.MYSQL_DATE_FORMAT.parse(selectedDate));
 		} catch (ParseException e) {
 			
-			e.printStackTrace();
+			LOGGER.error("Failed to parse date: {} from request. Expected format is {}", selectedDate, DateUtils.MYSQL_DATE_FORMAT.toPattern());
 			return null;
 		}
 	}

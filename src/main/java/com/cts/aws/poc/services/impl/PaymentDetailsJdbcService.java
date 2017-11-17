@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -32,13 +35,13 @@ import com.cts.aws.poc.utils.GeographyUtil;
 @Service
 public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceService {
 	
+	private static final Logger LOGGER = LogManager.getLogger(PaymentDetailsJdbcService.class);
+	
 	private static final String QUERY = "SELECT status, txn_currency, count(*) FROM payment_details where value_date = ? group by status, txn_currency";
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
-	
-
 	@Override
 	public List<PaymentDetails> persistNewBatch(PaymentBatch batch) {
 		throw new UnsupportedOperationException("This operation is currently not supported by JDBC service");
@@ -60,7 +63,11 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 	@Override
 	public Map<String, Map<String, Integer>> getDashboardData(Date selectedDate) {
 		
-		List<DashboardData> listFromDB = jdbcTemplate.query(QUERY, new Object[] { DateUtils.MYSQL_DATE_FORMAT.format(selectedDate) }, new RowMapper<DashboardData>() {
+		String dateString = DateUtils.MYSQL_DATE_FORMAT.format(selectedDate);
+		
+		LOGGER.debug("Fetching dashboard data for date {}", dateString);
+		
+		List<DashboardData> listFromDB = jdbcTemplate.query(QUERY, new Object[] { dateString }, new RowMapper<DashboardData>() {
 
 			@Override
 			public DashboardData mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -68,24 +75,31 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 			}
 		});
 		
-		Map<String, List<DashboardData>> dataGroupedByRegion = listFromDB.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
-		
-		Map<String, Integer> statusMap = new HashMap<>();
 		Map<String, Map<String, Integer>> response = new HashMap<>();
 		
-		dataGroupedByRegion.forEach((region, dataList) -> {
+		if (CollectionUtils.isNotEmpty(listFromDB)) {
 			
-			dataList.forEach(data -> {
+			LOGGER.info("Fetched {} records for date: {}", dateString);
+		
+			Map<String, List<DashboardData>> dataGroupedByRegion = listFromDB.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
+			
+			Map<String, Integer> statusMap = new HashMap<>();
+			
+			dataGroupedByRegion.forEach((region, dataList) -> {
 				
-				if (statusMap.get(data.getStatus()) == null)
-					statusMap.put(data.getStatus(), data.getCount());
-				else {
-					statusMap.put(data.getStatus(), statusMap.get(data.getStatus()) + data.getCount());
-				}
+				dataList.forEach(data -> {
+					
+					if (statusMap.get(data.getStatus()) == null)
+						statusMap.put(data.getStatus(), data.getCount());
+					else {
+						statusMap.put(data.getStatus(), statusMap.get(data.getStatus()) + data.getCount());
+					}
+				});
+				
+				response.put(region, statusMap);
 			});
-			
-			response.put(region, statusMap);
-		});
+		} else
+			LOGGER.info("No results fetched for date {}", dateString);
 		
 		return response;
 	}

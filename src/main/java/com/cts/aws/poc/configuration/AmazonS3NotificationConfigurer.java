@@ -7,6 +7,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,8 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 	
 	private static final String NOTFCTN_CONFIG_NAME = "qConfiguration";
 	
+	private static final Logger LOGGER = LogManager.getLogger(AmazonS3NotificationConfigurer.class);
+	
 	@Value("${amazon.s3.inbound.bucket.name}")
 	private String bucketName;
 	
@@ -58,6 +62,8 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 		BucketNotificationConfiguration existingConfiguration = amazonS3Client.getBucketNotificationConfiguration(bucketName);
 		
 		if (existingConfiguration == null || existingConfiguration.getConfigurationByName(NOTFCTN_CONFIG_NAME) == null) {
+			
+			LOGGER.info("No configuration set for Bucket Event Notifications, setting up one for {} bucket now..", bucketName);
 		
 			// AmazonSQS Permissions
 			AmazonSQS sqsClient = AmazonSQSClientBuilder.defaultClient();
@@ -78,7 +84,7 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 	
 			amazonS3Client.setBucketNotificationConfiguration(bucketName, bucketNotificationConfiguration);
 			
-			System.out.println("Configured S3 Notifications for bucket: " + bucketName);
+			LOGGER.info("Configured S3 Bucket Event Notifications for bucket: {}, to deliver events to queue: {}", bucketName, queueURL);
 		}
 	}
 }
