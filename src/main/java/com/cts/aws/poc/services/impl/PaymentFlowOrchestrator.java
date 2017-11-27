@@ -93,7 +93,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 						.whenComplete((result, throwable) -> {
 										
 										if (throwable != null) {
-											throwable.printStackTrace();
+											LOGGER.error("Failed while processing file {}. Reason: {}", fileName, throwable);
 										}
 									});
 	}
@@ -130,7 +130,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				inputFormatValidator.validate(inputFile);
 			} catch (ValidationException e) {
 				
-				LOGGER.error("Format Validation of file {} failed!. Reason: {}", fileName, e);
+				LOGGER.error("Format Validation of file {} failed! Reason: {}", fileName, e);
 				// Update status of Inbound record for failure
 				payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.ERROR);
 				
@@ -154,45 +154,59 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				businessValidationPredicate.test(savedPayments);
 			} catch (SystemException se) {
 				
-				LOGGER.error("Business Validation of batch {} failed!. Reason: {}", paymentBatch.getBatchId(), se);
+				LOGGER.error("Business Validation of batch {} failed! Reason: {}", paymentBatch.getBatchId(), se);
 				
 				// Update payment statuses in case of Business validation failures
 				ValidationException validationEx = (ValidationException) se.getCause();
 				paymentsService.updatePaymentsOnValidationFailure(validationEx.getFailedPayments());
 				
+				LOGGER.info("Updated status of payments under batch {} to {}", paymentBatch.getBatchId(), PaymentStatus.REJECTED);
+				
 				// Remove failed payments from the payment batch canonical and Entity list
 				paymentBatch = cleanPaymentBatch(paymentBatch, savedPayments, validationEx.getFailedPayments());
+				
+				LOGGER.info("Removed failed payments from the payment batch canonical");
 				
 				// Check if at all the batch has any payments remaining to be processed further
 				if (paymentBatch.getTotalTxns() == 0) {
 
-					System.err.println("No payments in batch to process!");
+					LOGGER.warn("No payments to process in batch {}!", paymentBatch.getBatchId());
 					return;
 				}
 			}
 			
+			LOGGER.debug("Processing {} payments for generating output file", paymentBatch.getTotalTxns());
+			
 			// Transform the Canonical to Outbound file format
 			String outboundFileContent = (String) outboundFileTransformer.transform(paymentBatch);
 			
-			String fileName = new StringBuilder(LocalDate.now().toString()).append(".").append(System.currentTimeMillis()).append(".txt").toString();
+			String outboundFileName = new StringBuilder(LocalDate.now().toString()).append(".").append(System.currentTimeMillis()).append(".txt").toString();
 			
 			// Save to Outbound table
-			Payload outboundPayload = payloadService.persistOutboundPayload(fileName);
+			Payload outboundPayload = payloadService.persistOutboundPayload(outboundFileName);
+			
+			LOGGER.info("Saved new record for outbound payload with name {} and id {}", outboundFileName, outboundPayload.getPayloadId());
 			
 			// Validate the format of the outgoing file
 			try {
 				outputFormatValidator.validate(outboundFileContent);
 			} catch (ValidationException e) {
 				
+				LOGGER.error("Format Validation of outbound file {} failed! Reason: {}", fileName, e);
+				
 				// Update status of Outbound record for failure
 				payloadService.updatePayloadStatus(outboundPayload, PayloadStatus.ERROR);
+				
+				LOGGER.info("Updated status of payload {} to {}", outboundPayload.getPayloadId(), PayloadStatus.ERROR);
 				
 				throw new SystemException("Format Validation of output failed", e);
 			}
 			
 			// Publish the output file to downstream S3 bucket
-			DeferredResult<Boolean> deferredResult = fileStorageService.store(fileName, outboundFileContent);
+			DeferredResult<Boolean> deferredResult = fileStorageService.store(outboundFileName, outboundFileContent);
 			deferredResult.setResultHandler(new FileDispatchResultHandler(inboundPayload, outboundPayload, savedPayments));
+			
+			LOGGER.info("Submitted outbound file {} for upload", outboundFileName);
 		}
 	}
 	
@@ -222,14 +236,22 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				
 				payloadStatus = PayloadStatus.SENT;
 				paymentStatus = PaymentStatus.PROCESSED;
+				
+				LOGGER.info("Successfully uploaded file {} to S3", outboundPayload.getName());
+			} else {
+				LOGGER.error("Failed to upload file {} to S3", outboundPayload.getName());
 			}
 			
 			// Update statuses in RDS
 			payloadService.updatePayloadStatus(inboundPayload, PayloadStatus.PROCESSED);
+			LOGGER.info("Updated status of inbound payload {} to {}", inboundPayload.getPayloadId(), PayloadStatus.PROCESSED);
+			
 			payloadService.updatePayloadStatus(outboundPayload, payloadStatus);
+			LOGGER.info("Updated status of outbound payload {} to {}", outboundPayload.getPayloadId(), payloadStatus);
 			
 			// TODO: Might want to save Payment Errors in case of failure
 			paymentsService.updatePaymentsOnFileDispatch(payments, paymentStatus);
+			LOGGER.info("Updated status of payments to {}", paymentStatus);
 		}
 	}
 	
@@ -253,7 +275,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 		batchCanonical.getPayments().removeIf(payment -> failedPaymentIds.contains(payment.getInstrctnId()));
 		paymentEntities.removeIf(entity -> failedPaymentIds.contains(entity.getPaymentId()));
 		
-		// Ppdate the NbOfTxns in the batch canonical accordingly, after removal of failed payments from under the batch
+		// Update the NbOfTxns in the batch canonical accordingly, after removal of failed payments from under the batch
 		batchCanonical.setTotalTxns(batchCanonical.getPayments().size());
 		
 		return batchCanonical;

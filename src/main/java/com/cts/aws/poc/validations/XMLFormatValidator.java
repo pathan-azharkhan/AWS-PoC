@@ -15,6 +15,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -30,17 +32,24 @@ import com.cts.aws.poc.exceptions.ValidationException;
  */
 @Component("xmlFormatValidator")
 public class XMLFormatValidator implements FormatValidator<File> {
+	
+	private static final Logger LOGGER = LogManager.getLogger(XMLFormatValidator.class);
 
 	private static final String XML_SCHEMA = "/pain.001.001.03.xsd";
+	
+	private Schema schema;
 	
 	public boolean validate(File file) throws ValidationException {
 
 		try {
-			// create a SchemaFactory capable of understanding WXS schemas
-			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
-			// load a WXS schema, represented by a Schema instance
-			Schema schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
+			if (schema == null) {
+				
+				// create a SchemaFactory capable of understanding WXS schemas
+				SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+	
+				// load a WXS schema, represented by a Schema instance
+				schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
+			}
 
 			// create a Validator instance, which can be used to validate an instance document
 			Validator validator = schema.newValidator();
@@ -49,6 +58,8 @@ public class XMLFormatValidator implements FormatValidator<File> {
 			
 			validator.setErrorHandler(new SchemaValidationErrorHandler(validationErrors));
 
+			LOGGER.info("Validating new XML file {} against schema {}", file.getName(), XML_SCHEMA);
+			
 			// validate the XML file
 			validator.validate(new StreamSource(file));
 			
