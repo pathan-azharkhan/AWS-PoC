@@ -57,8 +57,6 @@ public class AmazonS3NotificationConfigurer implements InitializingBean {
 	
 	public void afterPropertiesSet() throws Exception {
 		
-		// Action=GetQueueUrl&Version=2012-11-05&QueueName=S3NotificationQueue
-		
 		BucketNotificationConfiguration existingConfiguration = amazonS3Client.getBucketNotificationConfiguration(bucketName);
 		
 		if (existingConfiguration == null || existingConfiguration.getConfigurationByName(NOTFCTN_CONFIG_NAME) == null) {

@@ -48,7 +48,7 @@ public class XMLFormatValidator implements FormatValidator<File> {
 				SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 	
 				// load a WXS schema, represented by a Schema instance
-				schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getFile());
+				schema = factory.newSchema(new ClassPathResource(XML_SCHEMA).getURL());
 			}
 
 			// create a Validator instance, which can be used to validate an instance document

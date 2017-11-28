@@ -3,7 +3,7 @@
   <p:CstmrCdtTrfInitn>
     <p:GrpHdr>
       <p:MsgId>98329837</p:MsgId>
-      <p:CreDtTm>2017-11-17T23:51:32</p:CreDtTm>
+      <p:CreDtTm>2017-11-28T23:51:32</p:CreDtTm>
       <p:NbOfTxs>1</p:NbOfTxs>
       <p:CtrlSum>145.65</p:CtrlSum>
       <p:InitgPty></p:InitgPty>
@@ -11,7 +11,7 @@
     <p:PmtInf>
       <p:PmtInfId>CHAS13987</p:PmtInfId>
       <p:PmtMtd>CHK</p:PmtMtd>
-      <p:ReqdExctnDt>2017-11-17</p:ReqdExctnDt>
+      <p:ReqdExctnDt>2017-11-28</p:ReqdExctnDt>
       <p:Dbtr>
         <p:Id>
           <p:OrgId>

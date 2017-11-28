@@ -170,7 +170,7 @@ public class PaymentFlowOrchestrator implements FlowOrchestrator, InitializingBe
 				// Check if at all the batch has any payments remaining to be processed further
 				if (paymentBatch.getTotalTxns() == 0) {
 
-					LOGGER.warn("No payments to process in batch {}!", paymentBatch.getBatchId());
+					LOGGER.warn("No payments to process in batch {}! Halting flow...", paymentBatch.getBatchId());
 					return;
 				}
 			}

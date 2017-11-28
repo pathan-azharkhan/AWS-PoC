@@ -51,10 +51,18 @@ public class AmazonS3FileStorageService implements FileStorageService {
 	
 	private TransferManager transferManager;
 	
+	private File downloadDirectory;
+	
 	@Autowired
-	public AmazonS3FileStorageService(AmazonS3 s3Client) {
+	public AmazonS3FileStorageService(AmazonS3 s3Client, @Value("${java.io.tmpdir}") String stagingDirectory) {
 		
 		transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+		downloadDirectory = new File(stagingDirectory.concat("/payments/downloads/"));
+		
+		if (!downloadDirectory.exists())
+			downloadDirectory.mkdirs();
+		
+		LOGGER.debug("Using directory {} for staging downloaded files", downloadDirectory.getPath());
 	}
 	
 	@Override
@@ -72,7 +80,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			
 			transferManager.upload(new PutObjectRequest(inboundBucketName, file.getOriginalFilename(), file.getInputStream(), objectMetadata));
 			
-			LOGGER.info("Uploaded file {} to S3 bucket {}", file.getOriginalFilename(), inboundBucketName);
+			LOGGER.info("Uploaded file {} to S3 bucket '{}'", file.getOriginalFilename(), inboundBucketName);
 			
 		} catch (AmazonClientException e) {
 			
@@ -100,7 +108,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			objectMetadata.setContentMD5(md5Base64);
 			
 			Upload uploadTracker = transferManager.upload(new PutObjectRequest(outboundBucketName, fileName, new ByteArrayInputStream(fileContents.getBytes()), objectMetadata));
-			LOGGER.info("Initiated upload of file {} to S3 bucket {}", fileName, outboundBucketName);
+			LOGGER.info("Initiated upload of file {} to S3 bucket '{}'", fileName, outboundBucketName);
 			
 			uploadTracker.addProgressListener(new ProgressListener() {
 				
@@ -115,7 +123,7 @@ public class AmazonS3FileStorageService implements FileStorageService {
 			});
 		} catch (AmazonClientException e) {
 			
-			LOGGER.error("Failed to upload file {} to S3 bucket {}. Reason: {}", fileName, outboundBucketName, e);
+			LOGGER.error("Failed to upload file {} to S3 bucket '{}'. Reason: {}", fileName, outboundBucketName, e);
 			deferredResult.setErrorResult(e);
 		}
 		return deferredResult;
@@ -130,12 +138,12 @@ public class AmazonS3FileStorageService implements FileStorageService {
 	@Override
 	public File retrieve(String fileName) {
 		
-		File downloadedFile = new File(fileName);
+		File downloadedFile = new File(downloadDirectory, fileName);
 		
 		transferManager.download(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
 		
-		LOGGER.info("Downloaded file: {} from S3 bucket {}", fileName, inboundBucketName);
-		LOGGER.debug("Downloaded file size: {}", downloadedFile.length());
+		LOGGER.info("Downloaded file {} from S3 bucket '{}'", fileName, inboundBucketName);
+		LOGGER.debug("Downloaded file size: {} bytes", downloadedFile.length());
 		
 		return downloadedFile;
 	}

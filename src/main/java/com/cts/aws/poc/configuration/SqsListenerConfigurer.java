@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
 import org.springframework.stereotype.Component;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.event.S3EventNotification;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRecord;
@@ -36,20 +37,24 @@ public class SqsListenerConfigurer {
 		
 		LOGGER.info("Message received from SQS~{}. Contents: {}", QUEUE_NAME, message);
 		
-		S3EventNotification eventNotification = S3EventNotification.parseJson(message);
-		List<S3EventNotificationRecord> records = eventNotification.getRecords();
-		
-		if (CollectionUtils.isNotEmpty(records)) {
+		try {
+			S3EventNotification eventNotification = S3EventNotification.parseJson(message);
+			List<S3EventNotificationRecord> records = eventNotification.getRecords();
 			
-			LOGGER.info("Publishing {} file(s) to Orchestrator", records.size());
-			
-			records.parallelStream().forEach(record -> {
-
-				S3Entity s3Entity = record.getS3();
-				String fileName = s3Entity.getObject().getKey();
-
-				flowOrchestrator.process(fileName);
-			});
+			if (CollectionUtils.isNotEmpty(records)) {
+				
+				LOGGER.info("Publishing {} file(s) to Orchestrator", records.size());
+				
+				records.parallelStream().forEach(record -> {
+	
+					S3Entity s3Entity = record.getS3();
+					String fileName = s3Entity.getObject().getKey();
+	
+					flowOrchestrator.process(fileName);
+				});
+			}
+		} catch (SdkClientException e) {
+			LOGGER.error("Unable to parse message received from SQS");
 		}
 	}
 }
