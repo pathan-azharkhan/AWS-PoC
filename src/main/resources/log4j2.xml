@@ -3,18 +3,26 @@
     <Properties>
 <!--             %d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${hostName} | [%15.15t] %-40.40c{1.} : %m%n%ex -->
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %c : %m%n%ex</Property>
-<!--         <Property name="LOG_PATH">D:/541234/Samples/logs/</Property> -->
-        <Property name="LOG_PATH">/var/log/</Property>
+        <Property name="LOG_PATH">D:/541234/Samples/logs/</Property>
+<!--         <Property name="LOG_PATH">/var/log/</Property> -->
     </Properties>
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
         
-        <RollingFile name="RollingFile" fileName="${LOG_PATH}/aws-poc.log" filePattern="${LOG_PATH}/aws-poc-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="AppLogFile" fileName="${LOG_PATH}/aws-poc.log" filePattern="${LOG_PATH}/aws-poc-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="${LOG_PATTERN}" />
 			<Policies>
 				<SizeBasedTriggeringPolicy size="5 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="4"/>
+		</RollingFile>
+        
+        <RollingFile name="DebugLogFile" fileName="${LOG_PATH}/aws-poc-debug.log" filePattern="${LOG_PATH}/aws-poc-debug-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10 MB" />
 			</Policies>
 			<DefaultRolloverStrategy max="4"/>
 		</RollingFile>
@@ -22,16 +30,14 @@
     <Loggers>
         <Logger name="com.cts.aws.poc" level="debug" additivity="false">
             <AppenderRef ref="ConsoleAppender" />
-            <AppenderRef ref="RollingFile" />
+            <AppenderRef ref="AppLogFile" />
         </Logger>
-        <!-- <Logger name="org.apache.http.wire" level="debug" additivity="false">
-            <AppenderRef ref="ConsoleAppender" />
-            <AppenderRef ref="RollingFile" />
+        <Logger name="org.apache.http.wire" level="debug" additivity="false">
+            <AppenderRef ref="DebugLogFile" />
         </Logger>
         <Logger name="com.amazonaws" level="debug" additivity="false">
-            <AppenderRef ref="ConsoleAppender" />
-            <AppenderRef ref="RollingFile" />
-        </Logger> -->
+            <AppenderRef ref="DebugLogFile" />
+        </Logger>
 
         <Root level="info">
             <AppenderRef ref="ConsoleAppender" />

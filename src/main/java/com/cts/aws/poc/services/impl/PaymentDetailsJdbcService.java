@@ -79,7 +79,7 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 		
 		if (CollectionUtils.isNotEmpty(listFromDB)) {
 			
-			LOGGER.info("Fetched {} records for date: {}", dateString);
+			LOGGER.info("Fetched {} records for date: {}", listFromDB.size(), dateString);
 		
 			Map<String, List<DashboardData>> dataGroupedByRegion = listFromDB.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
 			
