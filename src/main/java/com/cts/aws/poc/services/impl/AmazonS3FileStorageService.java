@@ -32,6 +32,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.cts.aws.poc.exceptions.SystemException;
 import com.cts.aws.poc.services.FileStorageService;
 
 /**
@@ -140,7 +141,13 @@ public class AmazonS3FileStorageService implements FileStorageService {
 		
 		File downloadedFile = new File(downloadDirectory, fileName);
 		
-		transferManager.download(new GetObjectRequest(inboundBucketName, fileName), downloadedFile);
+		try {
+			transferManager.download(new GetObjectRequest(inboundBucketName, fileName), downloadedFile).waitForCompletion();
+		} catch (AmazonClientException | InterruptedException e) {
+			
+			LOGGER.error("Failed to download file {} from S3 bucket '{}'. Reason: {}", fileName, inboundBucketName, e);
+			throw new SystemException("Failed to download file from S3 bucket!", e);
+		}
 		
 		LOGGER.info("Downloaded file {} from S3 bucket '{}'", fileName, inboundBucketName);
 		LOGGER.debug("Downloaded file size: {} bytes", downloadedFile.length());

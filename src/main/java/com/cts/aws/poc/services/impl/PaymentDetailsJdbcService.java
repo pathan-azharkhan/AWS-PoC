@@ -37,7 +37,7 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 	
 	private static final Logger LOGGER = LogManager.getLogger(PaymentDetailsJdbcService.class);
 	
-	private static final String QUERY = "SELECT status, txn_currency, count(*) FROM payment_details where value_date = ? group by status, txn_currency";
+	private static final String QUERY = "SELECT status, txn_currency, count(*) FROM payment_details where created_date = ? group by status, txn_currency";
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -83,9 +83,9 @@ public class PaymentDetailsJdbcService implements PaymentDetailsPersistenceServi
 		
 			Map<String, List<DashboardData>> dataGroupedByRegion = listFromDB.stream().collect(Collectors.groupingBy(DashboardData::getRegion));
 			
-			Map<String, Integer> statusMap = new HashMap<>();
-			
 			dataGroupedByRegion.forEach((region, dataList) -> {
+				
+				Map<String, Integer> statusMap = new HashMap<>();
 				
 				dataList.forEach(data -> {
 					
